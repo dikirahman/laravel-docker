@@ -1,0 +1,81 @@
+version: "3.7"
+services:
+    
+#Laravel API
+  laravel-api:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: laravel-api
+    container_name: laravel-api
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: laravel-api
+      SERVICE_TAGS: dev
+    ports:
+      - 8000:8000
+    volumes:
+      - ./:/app
+    networks:
+      - laravel_network
+    depends_on:
+      - db
+
+#Laravel Frontend
+  laravel-frontend:
+    build:
+      context: ../laravel-frontend
+      dockerfile: Dockerfile
+    image: laravel-frontend
+    container_name: laravel-frontend
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: laravel-frontend
+      SERVICE_TAGS: dev
+    ports:
+      - 8001:8001
+    volumes:
+      - ./:/app
+    networks:
+      - laravel_network
+    depends_on:
+      - db
+
+#Nginx Service
+  nginx:
+    image: nginx:1.17-alpine
+    container_name: webserver
+    restart: unless-stopped
+    ports:
+      - 80:80
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d:/etc/nginx/conf.d/
+    networks:
+      - laravel_network
+  #Mysl Service
+  db:
+    image: mysql:latest
+    container_name: db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: simple_restapi
+      MYSQL_ROOT_PASSWORD: GGHADasdfjk239
+    volumes:
+      - dbdata:/var/lib/mysql/
+      - ./mysql/mysql.cnf:/etc/mysql/mysql.cnf
+    ports:
+      - "3306:3306"
+    networks:
+      - laravel_network
+
+networks:
+  laravel_network:
+    driver: bridge
+
+#Volumes
+volumes:
+  dbdata:
+    driver: local
